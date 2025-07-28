@@ -164,6 +164,8 @@
 </head>
 
 <body>
+    <div id="auth-container"></div>
+
     <header>
         <img src="static/images/logo.png" alt="Flarivana Logo" class="logo">
         <h1>Flarivana Candle Co.</h1>
@@ -208,42 +210,57 @@
         <p><a href="https://www.instagram.com/flarivana?igsh=MXFra3AwMGE2bG1jOQ==" target="_blank">Instagram</a></p>
     </section>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            where
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9f1lRESUXuR3it7V0I1lgT9uIxAGthCs",
+            authDomain: "flarivana-a81e7.firebaseapp.com",
+            projectId: "flarivana-a81e7",
+            storageBucket: "flarivana-a81e7.appspot.com",
+            messagingSenderId: "584330940249",
+            appId: "1:584330940249:web:b840da567fc1a16b438648"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         const productData = {
             1: {
                 name: "Свеча Ваниль",
                 price: 2500,
                 image: "static/images/product1.jpg",
                 description: "Нежный аромат ванили для уюта в вашем доме.",
-                characteristics: ["100% соевый воск", "Ручная работа", "Горение: до 35 часов"],
-                reviews: ["Очень понравилась!", "Пахнет вкусно и долго"]
+                characteristics: ["100% соевый воск", "Ручная работа", "Горение: до 35 часов"]
             },
             2: {
                 name: "Свеча Лаванда",
                 price: 2700,
                 image: "static/images/product2.jpg",
                 description: "Расслабляющий лавандовый аромат для сна и отдыха.",
-                characteristics: ["Натуральный воск", "Ручная заливка", "Горение: до 40 часов"],
-                reviews: ["Помогает расслабиться", "Идеальна для вечеров"]
+                characteristics: ["Натуральный воск", "Ручная заливка", "Горение: до 40 часов"]
             }
         };
 
         let cart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-        function saveCart() {
-            localStorage.setItem("cart", JSON.stringify(cart));
-        }
-
-        function openCart() {
-            document.getElementById('cartModal').style.display = 'flex';
-            renderCart();
-        }
-
-        function closeCart() {
-            document.getElementById('cartModal').style.display = 'none';
-        }
-
-        function renderCart() {
+        const saveCart = () => localStorage.setItem("cart", JSON.stringify(cart));
+        const renderCart = () => {
             const cartItems = document.getElementById('cartItems');
             const totalPrice = document.getElementById('totalPrice');
             cartItems.innerHTML = '';
@@ -251,33 +268,39 @@
             cart.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'cart-item';
-                div.innerHTML = `<img src="${item.image}" alt="${item.name}"><div class="cart-item-info">${item.name} × ${item.qty}<br><small>${item.price * item.qty} ₸</small></div><button class="remove-btn" onclick="removeFromCart(${item.id})">✕</button>`;
+                div.innerHTML = `
+          <img src="${item.image}" alt="${item.name}">
+          <div class="cart-item-info">${item.name} × ${item.qty}<br><small>${item.price * item.qty} ₸</small></div>
+          <button class="remove-btn" onclick="removeFromCart(${item.id})">✕</button>
+        `;
                 cartItems.appendChild(div);
                 total += item.price * item.qty;
             });
             totalPrice.textContent = `Итого: ${total} ₸`;
-        }
-
-        function removeFromCart(id) {
+        };
+        window.removeFromCart = (id) => {
             cart = cart.filter(item => item.id !== id);
             saveCart();
             renderCart();
-        }
-
-        function clearCart() {
+        };
+        window.clearCart = () => {
             cart = [];
             saveCart();
             renderCart();
-        }
-
-        function confirmAndSendToWhatsApp() {
+        };
+        window.openCart = () => {
+            document.getElementById('cartModal').style.display = 'flex';
+            renderCart();
+        };
+        window.closeCart = () => {
+            document.getElementById('cartModal').style.display = 'none';
+        };
+        window.confirmAndSendToWhatsApp = () => {
             const name = document.getElementById('orderName').value.trim();
             const phone = document.getElementById('orderPhone').value.trim();
             const address = document.getElementById('orderAddress').value.trim();
-            if (!name || !phone || !address) {
-                alert("Заполните все поля");
-                return;
-            }
+            if (!name || !phone || !address) return alert("Заполните все поля");
+
             let msg = `Ваш заказ:\nФИО: ${name}\nТелефон: ${phone}\nАдрес: ${address}\n`;
             let total = 0;
             cart.forEach(item => {
@@ -286,36 +309,133 @@
             });
             msg += `\nИтого: ${total} ₸`;
             window.open(`https://wa.me/77479573817?text=${encodeURIComponent(msg)}`, "_blank");
-        }
-
-        function openProductModal(id) {
-            const p = productData[id];
-            let html = `<span class='close' onclick='closeProductModal()'>&times;</span>`;
-            html += `<img src='${p.image}' alt='${p.name}' style='width:100%; border-radius:8px;'>`;
-            html += `<h3>${p.name}</h3><p>${p.description}</p><h4>Характеристики</h4><ul>${p.characteristics.map(c => `<li>${c}</li>`).join('')}</ul><h4>Отзывы</h4><ul>${p.reviews.map(r => `<li>${r}</li>`).join('')}</ul>`;
-            html += `<button onclick="addToCart(${id}, '${p.name}', ${p.price}, '${p.image}')">Добавить в корзину</button>`;
-            document.getElementById('productModalContent').innerHTML = html;
-            document.getElementById('productModal').style.display = 'flex';
-        }
-
-        function closeProductModal() {
-            document.getElementById('productModal').style.display = 'none';
-        }
-
-        function addToCart(id, name, price, image) {
+        };
+        window.addToCart = (id, name, price, image) => {
             const existing = cart.find(item => item.id === id);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ id, name, price, image, qty: 1 });
-            }
+            if (existing) existing.qty += 1;
+            else cart.push({ id, name, price, image, qty: 1 });
             saveCart();
             alert(`${name} добавлен в корзину.`);
             renderCart();
+        };
+        renderCart();
+
+        function renderAuthForm() {
+            const container = document.getElementById("auth-container");
+            container.innerHTML = `
+        <div class="auth-overlay">
+          <div class="auth-box">
+            <h3>Вход / Регистрация</h3>
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="password" placeholder="Пароль">
+            <div class="auth-buttons">
+              <button id="register-btn">Регистрация</button>
+              <button id="login-btn">Войти</button>
+            </div>
+            <p id="auth-status"></p>
+          </div>
+        </div>
+      `;
+            document.getElementById("register-btn").onclick = async () => {
+                const email = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value.trim();
+                try {
+                    await createUserWithEmailAndPassword(auth, email, password);
+                } catch (e) {
+                    document.getElementById("auth-status").innerText = e.message;
+                }
+            };
+            document.getElementById("login-btn").onclick = async () => {
+                const email = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value.trim();
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch (e) {
+                    document.getElementById("auth-status").innerText = e.message;
+                }
+            };
         }
 
-        renderCart();
+        async function loadReviews(productId) {
+            const q = query(collection(db, "reviews"), where("productId", "==", productId));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => doc.data());
+        }
+        async function submitReview(productId, rating, text, user) {
+            await addDoc(collection(db, "reviews"), { productId, rating, text, user });
+        }
+        window.toggleDetails = (id) => {
+            const el = document.getElementById(`details${id}`);
+            const btn = document.getElementById(`toggleBtn${id}`);
+            el.classList.add("show");
+            btn.style.display = "none";
+        };
+        window.handleSubmitReview = async (id) => {
+            const rating = parseFloat(document.getElementById("reviewRating").value);
+            const text = document.getElementById("reviewText").value.trim();
+            const user = auth.currentUser;
+            if (!rating || !text || !user) return alert("Заполните все поля");
+            await submitReview(id, rating, text, user.email || user.uid);
+            alert("Спасибо за отзыв!");
+            openProductModal(id);
+        };
+        window.openProductModal = async (id) => {
+            const p = productData[id];
+            const reviews = await loadReviews(id);
+            const user = auth.currentUser;
+            let html = `
+        <span class='close' onclick='closeProductModal()'>&times;</span>
+        <img src='${p.image}' alt='${p.name}' style='width:100%; border-radius:8px;'>
+        <h3>${p.name}</h3>
+        <p style="font-weight:bold;">Цена: ${p.price} ₸</p>
+        <p>${p.description}</p>
+    
+        <h4>Отзывы</h4>
+        <ul style="list-style: none; padding: 0;">
+          ${reviews.map(r => `
+            <li style="margin-bottom: 10px;">
+              ${'⭐'.repeat(Math.floor(r.rating))}${r.rating % 1 ? '✬' : ''} (${r.rating}/5)<br>${r.text}<br><small>— ${r.user}</small>
+            </li>
+          `).join('') || '<li>Отзывов пока нет.</li>'}
+        </ul>
+    
+        ${user ? `
+          <div style="margin-top:15px;">
+            <h4>Оставить отзыв</h4>
+            <input type="number" id="reviewRating" min="1" max="5" step="0.5" placeholder="Оценка (1-5)">
+            <textarea id="reviewText" placeholder="Ваш отзыв" style="width:100%; padding:8px;"></textarea>
+            <button onclick="handleSubmitReview(${id})" style="margin-top:10px;">Отправить</button>
+          </div>` : '<p><em>Авторизуйтесь, чтобы оставить отзыв</em></p>'}
+    
+        <button onclick="toggleDetails(${id})" id="toggleBtn${id}" style="margin-top:15px;">Показать состав и характеристики</button>
+        <div id="details${id}" class="characteristics" style="margin-top:10px;">
+          <h4>Состав и характеристики</h4>
+          <ul>${p.characteristics.map(c => `<li>${c}</li>`).join('')}</ul>
+        </div>
+    
+        <button style="margin-top:15px;" onclick="addToCart(${id}, '${p.name}', ${p.price}, '${p.image}')">Добавить в корзину</button>
+      `;
+            document.getElementById('productModalContent').innerHTML = html;
+            document.getElementById('productModal').style.display = 'flex';
+        };
+        window.closeProductModal = () => {
+            document.getElementById('productModal').style.display = 'none';
+        };
+        onAuthStateChanged(auth, (user) => {
+            const products = document.querySelector(".products");
+            const container = document.getElementById("auth-container");
+            if (user) {
+                container.innerHTML = "";
+                products.style.display = "flex";
+                products.style.opacity = "1";
+            } else {
+                products.style.display = "none";
+                products.style.opacity = "0";
+                renderAuthForm();
+            }
+        });
     </script>
+
 </body>
 
 </html>
