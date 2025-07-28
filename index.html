@@ -3,25 +3,18 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flarivana Candle Co.</title>
-    <link rel="icon" href="Flarivana/static/images/favicon.png" type="image/png">
-    <link rel="stylesheet" href="Flarivana/static/styles/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Open+Sans&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="static/images/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Open+Sans&display=swap"
+        rel="stylesheet">
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
-            line-height: 1.6;
             margin: 0;
             padding: 0;
             background-color: #fffefc;
             color: #333;
-        }
-
-        h1,
-        h2,
-        h3 {
-            font-family: 'Montserrat', sans-serif;
         }
 
         header {
@@ -34,8 +27,14 @@
         }
 
         header .logo {
-            width: 60px;
+            width: 70px;
             margin-bottom: 10px;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Montserrat', sans-serif;
         }
 
         button {
@@ -47,7 +46,6 @@
             border-radius: 6px;
             cursor: pointer;
             transition: background-color 0.3s;
-            margin-top: 10px;
         }
 
         button:hover {
@@ -64,20 +62,26 @@
 
         .product {
             background: #fff;
-            border: 1px solid #eee;
-            border-radius: 8px;
+            border-radius: 10px;
             width: 250px;
             padding: 16px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .product:hover {
+            transform: translateY(-5px);
         }
 
         .product img {
             max-width: 100%;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
-        .modal {
+        .modal,
+        .modal-product {
             display: none;
             position: fixed;
             z-index: 100;
@@ -90,12 +94,13 @@
             align-items: center;
         }
 
-        .modal-content {
+        .modal-content,
+        .modal-product-content {
             background: #fff;
             padding: 20px;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
-            border-radius: 10px;
+            border-radius: 12px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -115,9 +120,9 @@
         .cart-item img {
             width: 50px;
             height: 50px;
-            object-fit: cover;
             margin-right: 10px;
             border-radius: 6px;
+            object-fit: cover;
         }
 
         .cart-item-info {
@@ -127,16 +132,16 @@
         .remove-btn {
             background: transparent;
             color: red;
-            font-size: 16px;
-            cursor: pointer;
             border: none;
+            font-size: 18px;
+            cursor: pointer;
         }
 
         input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             margin-top: 10px;
-            border-radius: 4px;
+            border-radius: 6px;
             border: 1px solid #ccc;
         }
 
@@ -160,23 +165,21 @@
 
 <body>
     <header>
-        <img src="static/images/logo.png" alt="Flarivana Logo" class="logo" />
+        <img src="static/images/logo.png" alt="Flarivana Logo" class="logo">
         <h1>Flarivana Candle Co.</h1>
         <button onclick="openCart()">🛒 Открыть корзину</button>
     </header>
 
     <main class="products">
-        <div class="product">
-            <img src="static/images/product1.jpg" alt="Продукт 1" />
+        <div class="product" onclick="openProductModal(1)">
+            <img src="static/images/product1.jpg" alt="Свеча Ваниль">
             <h3>Свеча Ваниль</h3>
             <p>Цена: 2500 ₸</p>
-            <button onclick="addToCart(1, 'Свеча Ваниль', 2500, 'static/images/product1.jpg')">Добавить в корзину</button>
         </div>
-        <div class="product">
-            <img src="static/images/product2.jpg" alt="Продукт 2" />
+        <div class="product" onclick="openProductModal(2)">
+            <img src="static/images/product2.jpg" alt="Свеча Лаванда">
             <h3>Свеча Лаванда</h3>
             <p>Цена: 2700 ₸</p>
-            <button onclick="addToCart(2, 'Свеча Лаванда', 2700, 'static/images/product2.jpg')">Добавить в корзину</button>
         </div>
     </main>
 
@@ -185,10 +188,10 @@
             <span class="close" onclick="closeCart()">&times;</span>
             <h3>🛒 Ваша корзина</h3>
             <div id="cartItems"></div>
-            <p id="totalPrice" style="margin-top: 15px;"></p>
-            <input id="orderName" type="text" placeholder="ФИО" />
-            <input id="orderPhone" type="tel" placeholder="Номер телефона" />
-            <input id="orderAddress" type="text" placeholder="Адрес доставки" />
+            <p id="totalPrice"></p>
+            <input id="orderName" type="text" placeholder="ФИО">
+            <input id="orderPhone" type="tel" placeholder="Номер телефона">
+            <input id="orderAddress" type="text" placeholder="Адрес доставки">
             <div class="modal-buttons">
                 <button onclick="confirmAndSendToWhatsApp()">Отправить заказ в WhatsApp</button>
                 <button onclick="clearCart()">Очистить</button>
@@ -196,29 +199,39 @@
         </div>
     </div>
 
+    <div id="productModal" class="modal-product">
+        <div class="modal-product-content" id="productModalContent"></div>
+    </div>
+
     <section style="text-align:center; padding: 30px 10px; background: #fdf7f2;">
         <h3>📲 Наши контакты</h3>
-        <p><a href="https://www.instagram.com/flarivana_candle_co" target="_blank">Instagram</a></p>
-        <p><a href="https://t.me/Flarivana_Candle_Co" target="_blank">Telegram-канал: работы</a></p>
+        <p><a href="https://www.instagram.com/flarivana?igsh=MXFra3AwMGE2bG1jOQ==" target="_blank">Instagram</a></p>
     </section>
 
     <script>
+        const productData = {
+            1: {
+                name: "Свеча Ваниль",
+                price: 2500,
+                image: "static/images/product1.jpg",
+                description: "Нежный аромат ванили для уюта в вашем доме.",
+                characteristics: ["100% соевый воск", "Ручная работа", "Горение: до 35 часов"],
+                reviews: ["Очень понравилась!", "Пахнет вкусно и долго"]
+            },
+            2: {
+                name: "Свеча Лаванда",
+                price: 2700,
+                image: "static/images/product2.jpg",
+                description: "Расслабляющий лавандовый аромат для сна и отдыха.",
+                characteristics: ["Натуральный воск", "Ручная заливка", "Горение: до 40 часов"],
+                reviews: ["Помогает расслабиться", "Идеальна для вечеров"]
+            }
+        };
+
         let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
         function saveCart() {
             localStorage.setItem("cart", JSON.stringify(cart));
-        }
-
-        function addToCart(id, name, price, image) {
-            const existing = cart.find(item => item.id === id);
-            if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({ id, name, price, image, qty: 1 });
-            }
-            saveCart();
-            alert(`${name} добавлен в корзину.`);
-            renderCart();
         }
 
         function openCart() {
@@ -236,14 +249,10 @@
             cartItems.innerHTML = '';
             let total = 0;
             cart.forEach(item => {
-                const line = document.createElement('div');
-                line.className = "cart-item";
-                line.innerHTML = `
-                    <img src="${item.image}" alt="${item.name}" />
-                    <div class="cart-item-info">${item.name} × ${item.qty}<br><small>${item.price * item.qty} ₸</small></div>
-                    <button class="remove-btn" onclick="removeFromCart(${item.id})">✕</button>
-                `;
-                cartItems.appendChild(line);
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `<img src="${item.image}" alt="${item.name}"><div class="cart-item-info">${item.name} × ${item.qty}<br><small>${item.price * item.qty} ₸</small></div><button class="remove-btn" onclick="removeFromCart(${item.id})">✕</button>`;
+                cartItems.appendChild(div);
                 total += item.price * item.qty;
             });
             totalPrice.textContent = `Итого: ${total} ₸`;
@@ -262,36 +271,47 @@
         }
 
         function confirmAndSendToWhatsApp() {
-            closeCart();
-            setTimeout(() => {
-                if (cart.length === 0) return;
+            const name = document.getElementById('orderName').value.trim();
+            const phone = document.getElementById('orderPhone').value.trim();
+            const address = document.getElementById('orderAddress').value.trim();
+            if (!name || !phone || !address) {
+                alert("Заполните все поля");
+                return;
+            }
+            let msg = `Ваш заказ:\nФИО: ${name}\nТелефон: ${phone}\nАдрес: ${address}\n`;
+            let total = 0;
+            cart.forEach(item => {
+                msg += `• ${item.name} × ${item.qty} – ${item.price * item.qty} ₸\n`;
+                total += item.price * item.qty;
+            });
+            msg += `\nИтого: ${total} ₸`;
+            window.open(`https://wa.me/77479573817?text=${encodeURIComponent(msg)}`, "_blank");
+        }
 
-                let name = document.getElementById('orderName').value.trim();
-                let phoneNumber = document.getElementById('orderPhone').value.trim();
-                let address = document.getElementById('orderAddress').value.trim();
+        function openProductModal(id) {
+            const p = productData[id];
+            let html = `<span class='close' onclick='closeProductModal()'>&times;</span>`;
+            html += `<img src='${p.image}' alt='${p.name}' style='width:100%; border-radius:8px;'>`;
+            html += `<h3>${p.name}</h3><p>${p.description}</p><h4>Характеристики</h4><ul>${p.characteristics.map(c => `<li>${c}</li>`).join('')}</ul><h4>Отзывы</h4><ul>${p.reviews.map(r => `<li>${r}</li>`).join('')}</ul>`;
+            html += `<button onclick="addToCart(${id}, '${p.name}', ${p.price}, '${p.image}')">Добавить в корзину</button>`;
+            document.getElementById('productModalContent').innerHTML = html;
+            document.getElementById('productModal').style.display = 'flex';
+        }
 
-                if (!name || !phoneNumber || !address) {
-                    alert("Пожалуйста, заполните ФИО, номер телефона и адрес доставки.");
-                    return;
-                }
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
 
-                if (!/^(\+?7\d{10}|8\d{10})$/.test(phoneNumber)) {
-                    alert("Введите корректный номер телефона, например: +77001234567 или 87001234567");
-                    return;
-                }
-
-                let message = `Ваш заказ:\nФИО: ${name}\nТелефон: ${phoneNumber}\nАдрес: ${address}\n\n`;
-                let total = 0;
-                cart.forEach(item => {
-                    message += `• ${item.name} × ${item.qty} – ${item.price * item.qty} ₸\n`;
-                    total += item.price * item.qty;
-                });
-                message += `\nИтого: ${total} ₸`;
-
-                const phone = "77479578717";
-                const link = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-                window.open(link, "_blank");
-            }, 300);
+        function addToCart(id, name, price, image) {
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ id, name, price, image, qty: 1 });
+            }
+            saveCart();
+            alert(`${name} добавлен в корзину.`);
+            renderCart();
         }
 
         renderCart();
